@@ -25,12 +25,33 @@ export const ensureDefaultAdmin = createServerFn({ method: "POST" }).handler(asy
 
   const { data: existing, error: existingError } = await supabaseAdmin
     .from("profiles")
-    .select("id")
+    .select("id, must_change_password, status")
     .eq("username", DEFAULT_ADMIN_USERNAME)
     .maybeSingle();
 
   if (existingError) return { created: false, error: existingError.message };
-  if (existing) return { created: false };
+  if (existing) {
+    const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(existing.id);
+    if (authUser?.user) {
+      // While the default password has not been changed yet, keep it in sync
+      // with the current password format so Admin / 1111 always works.
+      if (existing.must_change_password) {
+        const { error: pwError } = await supabaseAdmin.auth.admin.updateUserById(existing.id, {
+          password: authPassword("1111"),
+          email_confirm: true,
+        });
+        if (pwError) return { created: false, error: pwError.message };
+        if (existing.status !== "Active") {
+          await supabaseAdmin.from("profiles").update({ status: "Active" }).eq("id", existing.id);
+        }
+        return { created: true };
+      }
+      return { created: false };
+    }
+    // Orphan profile without a sign-in account: remove and recreate below.
+    await supabaseAdmin.from("user_roles").delete().eq("user_id", existing.id);
+    await supabaseAdmin.from("profiles").delete().eq("id", existing.id);
+  }
 
   const email = usernameToEmail(DEFAULT_ADMIN_USERNAME);
   const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
@@ -38,6 +59,20 @@ export const ensureDefaultAdmin = createServerFn({ method: "POST" }).handler(asy
     password: authPassword("1111"),
     email_confirm: true,
   });
+  if (error?.message?.toLowerCase().includes("already")) {
+    const { data: list } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
+    const found = list?.users.find((u) => u.email === email);
+    if (found) {
+      await supabaseAdmin.auth.admin.updateUserById(found.id, { password: authPassword("1111"), email_confirm: true });
+      const { error: pe } = await supabaseAdmin.from("profiles").upsert({
+        id: found.id, full_name: "System Administrator", username: DEFAULT_ADMIN_USERNAME,
+        role: "admin", status: "Active", must_change_password: true,
+      });
+      if (pe) return { created: false, error: pe.message };
+      await supabaseAdmin.from("user_roles").upsert({ user_id: found.id, role: "admin" }, { onConflict: "user_id,role" });
+      return { created: true };
+    }
+  }
   if (error || !created.user) {
     return { created: false, error: error?.message ?? "Could not create the default account" };
   }
