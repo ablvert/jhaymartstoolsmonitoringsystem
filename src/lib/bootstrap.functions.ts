@@ -35,7 +35,7 @@ export const ensureDefaultAdmin = createServerFn({ method: "POST" }).handler(asy
   const email = usernameToEmail(DEFAULT_ADMIN_USERNAME);
   const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
     email,
-    password: "1111",
+    password: authPassword("1111"),
     email_confirm: true,
   });
   if (error || !created.user) {
