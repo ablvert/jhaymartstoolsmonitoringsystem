@@ -23,12 +23,13 @@ export function authPassword(password: string) {
 export const ensureDefaultAdmin = createServerFn({ method: "POST" }).handler(async () => {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-  const { data: existing } = await supabaseAdmin
+  const { data: existing, error: existingError } = await supabaseAdmin
     .from("profiles")
     .select("id")
     .eq("username", DEFAULT_ADMIN_USERNAME)
     .maybeSingle();
 
+  if (existingError) return { created: false, error: existingError.message };
   if (existing) return { created: false };
 
   const email = usernameToEmail(DEFAULT_ADMIN_USERNAME);
@@ -41,7 +42,7 @@ export const ensureDefaultAdmin = createServerFn({ method: "POST" }).handler(asy
     return { created: false, error: error?.message ?? "Could not create the default account" };
   }
 
-  await supabaseAdmin.from("profiles").insert({
+  const { error: profileError } = await supabaseAdmin.from("profiles").insert({
     id: created.user.id,
     full_name: "System Administrator",
     username: DEFAULT_ADMIN_USERNAME,
@@ -49,6 +50,7 @@ export const ensureDefaultAdmin = createServerFn({ method: "POST" }).handler(asy
     status: "Active",
     must_change_password: true,
   });
+  if (profileError) return { created: false, error: profileError.message };
   await supabaseAdmin.from("user_roles").insert({ user_id: created.user.id, role: "admin" });
 
   return { created: true };
