@@ -99,7 +99,7 @@ export function AppShell() {
         )}
       >
         <div className="flex items-center gap-[10px] border-b border-sidebar-border px-[14px] py-[14px]">
-          <img src={logo} alt="" width={816} height={816} className="h-[30px] w-[30px]" />
+          <img src={logo} alt="" width={512} height={512} className="h-[30px] w-[30px]" />
           <div className="leading-tight">
             <div className="text-[13px] font-medium">Jhaymarts</div>
             <div className="text-[11px] text-sidebar-muted">Tools Management</div>

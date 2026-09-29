@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { usernameToEmail } from "./bootstrap.functions";
+import { authPassword, usernameToEmail } from "./bootstrap.functions";
 
 async function assertAdmin(context: { supabase: any; userId: string }) {
   const { data, error } = await context.supabase.rpc("has_role", {
@@ -39,7 +39,7 @@ export const adminCreateUser = createServerFn({ method: "POST" })
 
     const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
       email: usernameToEmail(username),
-      password: data.password,
+      password: authPassword(data.password),
       email_confirm: true,
     });
     if (error || !created.user) throw new Error(error?.message ?? "Could not create the account");
@@ -117,7 +117,7 @@ export const adminSetPassword = createServerFn({ method: "POST" })
     }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.auth.admin.updateUserById(data.id, {
-      password: data.password,
+      password: authPassword(data.password),
     });
     if (error) throw new Error(error.message);
     await supabaseAdmin.from("profiles").update({ must_change_password: true }).eq("id", data.id);

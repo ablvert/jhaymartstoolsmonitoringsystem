@@ -8,6 +8,15 @@ export function usernameToEmail(username: string) {
 }
 
 /**
+ * The auth service requires passwords of 6+ characters, but the system allows
+ * short PINs such as the default "1111". Every password is sent through this
+ * deterministic transform before reaching auth; it is still hashed there.
+ */
+export function authPassword(password: string) {
+  return `JTMS-${password}`;
+}
+
+/**
  * Creates the default Admin / 1111 account the first time the system is used.
  * Idempotent: it does nothing once any admin profile exists.
  */

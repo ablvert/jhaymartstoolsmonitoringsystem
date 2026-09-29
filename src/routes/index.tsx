@@ -32,7 +32,7 @@ function SplashAndLogin() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const t = setTimeout(() => setShowSplash(false), 2600);
+    const t = setTimeout(() => setShowSplash(false), 3000);
     void ensureDefaultAdmin();
     return () => clearTimeout(t);
   }, []);
@@ -43,29 +43,38 @@ function SplashAndLogin() {
     }
   }, [showSplash, loading, session, profile, navigate]);
 
-  if (showSplash) return <Splash />;
+  if (showSplash) return <Splash onEnter={() => setShowSplash(false)} />;
   return <LoginCard onSignIn={signIn} />;
 }
 
-function Splash() {
+function Splash({ onEnter }: { onEnter: () => void }) {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-[20px] text-center">
       <img
         src={logo}
-        alt="Jhaymarts emblem"
-        width={816}
-        height={816}
-        className="h-[120px] w-[120px] object-contain sm:h-[160px] sm:w-[160px]"
+        alt="Jhaymarts logo"
+        width={512}
+        height={512}
+        className="h-[130px] w-[130px] object-contain sm:h-[170px] sm:w-[170px]"
       />
-      <h1 className="mt-[20px] text-[19px] font-medium tracking-wide text-foreground sm:text-[24px]">
-        JHAYMARTS TOOLS MANAGEMENT SYSTEM
+      <div className="mt-[20px] text-[12px] tracking-[0.2em] text-muted-foreground">
+        JHAYMARTS INDUSTRIES, INC.
+      </div>
+      <h1 className="mt-[6px] text-[24px] font-medium tracking-wide text-foreground sm:text-[32px]">
+        JHAYMARTS
       </h1>
-      <p className="mt-[5px] text-[13px] text-muted-foreground">
+      <div className="text-[14px] font-medium tracking-[0.15em] text-primary sm:text-[16px]">
+        TOOLS MANAGEMENT SYSTEM
+      </div>
+      <p className="mt-[8px] text-[13px] text-muted-foreground">
         Tools Inventory • Transfer • Return • Monitoring
       </p>
       <div className="mt-[24px] h-[3px] w-[200px] overflow-hidden rounded-[10px] bg-muted">
         <div className="h-full w-1/3 animate-[loading_1.4s_ease-in-out_infinite] rounded-[10px] bg-primary" />
       </div>
+      <Button className="mt-[24px]" onClick={onEnter}>
+        ENTER SYSTEM
+      </Button>
       <style>{`@keyframes loading {0%{transform:translateX(-100%)}100%{transform:translateX(300%)}}`}</style>
     </div>
   );
@@ -98,8 +107,8 @@ function LoginCard({ onSignIn }: { onSignIn: (u: string, p: string) => Promise<v
           <img
             src={logo}
             alt="Jhaymarts emblem"
-            width={816}
-            height={816}
+            width={512}
+            height={512}
             className="h-[64px] w-[64px] object-contain"
           />
           <h1 className="mt-[10px] text-[18px] font-medium text-foreground">
