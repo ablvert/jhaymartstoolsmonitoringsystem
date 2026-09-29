@@ -11,8 +11,8 @@ import { db } from "@/lib/mutations";
 import { logActivity } from "@/lib/auth";
 
 export const Route = createFileRoute("/_authenticated/inventory")({
-  validateSearch: (s: Record<string, unknown>): { status?: string } => ({
-    status: typeof s.status === "string" ? s.status : undefined,
+  validateSearch: (s: Record<string, unknown>): { status?: string | undefined } => ({
+    status: typeof s["status"] === "string" ? s["status"] : undefined,
   }),
   head: () => ({
     meta: [

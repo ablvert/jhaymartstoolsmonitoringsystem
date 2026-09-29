@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { Profile } from "./domain";
-import { authPassword, usernameToEmail } from "./bootstrap.functions";
+import { authPassword, DEFAULT_ADMIN_USERNAME, ensureDefaultAdmin, usernameToEmail } from "./bootstrap.functions";
 
 type AuthValue = {
   session: Session | null;
@@ -79,8 +79,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = useCallback(
     async (username: string, password: string) => {
       const email = usernameToEmail(username);
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password: authPassword(password) });
-      if (error || !data.user) throw new Error("Invalid username or password");
+      let { data, error } = await supabase.auth.signInWithPassword({ email, password: authPassword(password) });
+      if (error && username.trim().toLowerCase() === DEFAULT_ADMIN_USERNAME) {
+        // Make sure the default account exists, then retry once.
+        const setup = await ensureDefaultAdmin();
+        if (setup?.error) throw new Error(`Default account setup failed: ${setup.error}`);
+        if (setup?.created) {
+          ({ data, error } = await supabase.auth.signInWithPassword({ email, password: authPassword(password) }));
+        }
+      }
+      if (error || !data.user) {
+        const msg = error?.message ?? "";
+        if (/invalid login credentials/i.test(msg)) throw new Error("Invalid username or password");
+        throw new Error(msg ? `Sign-in failed: ${msg}` : "Sign-in failed. Please try again.");
+      }
 
       const { data: prof } = await supabase
         .from("profiles")
