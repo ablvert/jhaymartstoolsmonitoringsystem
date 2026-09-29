@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { Profile } from "./domain";
-import { usernameToEmail } from "./bootstrap.functions";
+import { authPassword, usernameToEmail } from "./bootstrap.functions";
 
 type AuthValue = {
   session: Session | null;
@@ -79,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = useCallback(
     async (username: string, password: string) => {
       const email = usernameToEmail(username);
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password: authPassword(password) });
       if (error || !data.user) throw new Error("Invalid username or password");
 
       const { data: prof } = await supabase
