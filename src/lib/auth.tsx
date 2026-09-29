@@ -79,7 +79,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = useCallback(
     async (username: string, password: string) => {
       const email = usernameToEmail(username);
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password: authPassword(password) });
+      let { data, error } = await supabase.auth.signInWithPassword({ email, password: authPassword(password) });
+      if (error && username.trim().toLowerCase() === DEFAULT_ADMIN_USERNAME) {
+        // Make sure the default account exists, then retry once.
+        const setup = await ensureDefaultAdmin();
+        if (setup?.error) throw new Error(`Default account setup failed: ${setup.error}`);
+        if (setup?.created) {
+          ({ data, error } = await supabase.auth.signInWithPassword({ email, password: authPassword(password) }));
+        }
+      }
       if (error || !data.user) {
         const msg = error?.message ?? "";
         if (/invalid login credentials/i.test(msg)) throw new Error("Invalid username or password");
