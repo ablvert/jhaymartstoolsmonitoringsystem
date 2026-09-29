@@ -21,7 +21,9 @@ import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedReturnsRouteImport } from './routes/_authenticated/returns'
 import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
+import { Route as AuthenticatedSystemRouteImport } from './routes/_authenticated/system'
 import { Route as AuthenticatedTransferRouteImport } from './routes/_authenticated/transfer'
+import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -84,9 +86,19 @@ const AuthenticatedSearchRoute = AuthenticatedSearchRouteImport.update({
   path: '/search',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSystemRoute = AuthenticatedSystemRouteImport.update({
+  id: '/system',
+  path: '/system',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedTransferRoute = AuthenticatedTransferRouteImport.update({
   id: '/transfer',
   path: '/transfer',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 
@@ -102,7 +114,9 @@ export interface FileRoutesByFullPath {
   '/reports': typeof AuthenticatedReportsRoute
   '/returns': typeof AuthenticatedReturnsRoute
   '/search': typeof AuthenticatedSearchRoute
+  '/system': typeof AuthenticatedSystemRoute
   '/transfer': typeof AuthenticatedTransferRoute
+  '/users': typeof AuthenticatedUsersRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -116,7 +130,9 @@ export interface FileRoutesByTo {
   '/reports': typeof AuthenticatedReportsRoute
   '/returns': typeof AuthenticatedReturnsRoute
   '/search': typeof AuthenticatedSearchRoute
+  '/system': typeof AuthenticatedSystemRoute
   '/transfer': typeof AuthenticatedTransferRoute
+  '/users': typeof AuthenticatedUsersRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -132,7 +148,9 @@ export interface FileRoutesById {
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/returns': typeof AuthenticatedReturnsRoute
   '/_authenticated/search': typeof AuthenticatedSearchRoute
+  '/_authenticated/system': typeof AuthenticatedSystemRoute
   '/_authenticated/transfer': typeof AuthenticatedTransferRoute
+  '/_authenticated/users': typeof AuthenticatedUsersRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -148,7 +166,9 @@ export interface FileRouteTypes {
     | '/reports'
     | '/returns'
     | '/search'
+    | '/system'
     | '/transfer'
+    | '/users'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -162,7 +182,9 @@ export interface FileRouteTypes {
     | '/reports'
     | '/returns'
     | '/search'
+    | '/system'
     | '/transfer'
+    | '/users'
   id:
     | '__root__'
     | '/'
@@ -177,7 +199,9 @@ export interface FileRouteTypes {
     | '/_authenticated/reports'
     | '/_authenticated/returns'
     | '/_authenticated/search'
+    | '/_authenticated/system'
     | '/_authenticated/transfer'
+    | '/_authenticated/users'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -271,11 +295,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSearchRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/system': {
+      id: '/_authenticated/system'
+      path: '/system'
+      fullPath: '/system'
+      preLoaderRoute: typeof AuthenticatedSystemRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/transfer': {
       id: '/_authenticated/transfer'
       path: '/transfer'
       fullPath: '/transfer'
       preLoaderRoute: typeof AuthenticatedTransferRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/users': {
+      id: '/_authenticated/users'
+      path: '/users'
+      fullPath: '/users'
+      preLoaderRoute: typeof AuthenticatedUsersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
   }
@@ -292,7 +330,9 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedReturnsRoute: typeof AuthenticatedReturnsRoute
   AuthenticatedSearchRoute: typeof AuthenticatedSearchRoute
+  AuthenticatedSystemRoute: typeof AuthenticatedSystemRoute
   AuthenticatedTransferRoute: typeof AuthenticatedTransferRoute
+  AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -306,7 +346,9 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedReturnsRoute: AuthenticatedReturnsRoute,
   AuthenticatedSearchRoute: AuthenticatedSearchRoute,
+  AuthenticatedSystemRoute: AuthenticatedSystemRoute,
   AuthenticatedTransferRoute: AuthenticatedTransferRoute,
+  AuthenticatedUsersRoute: AuthenticatedUsersRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
