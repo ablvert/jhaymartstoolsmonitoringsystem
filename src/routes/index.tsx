@@ -53,8 +53,8 @@ function Splash() {
       <img
         src={logo}
         alt="Jhaymarts emblem"
-        width={816}
-        height={816}
+        width={512}
+        height={512}
         className="h-[120px] w-[120px] object-contain sm:h-[160px] sm:w-[160px]"
       />
       <h1 className="mt-[20px] text-[19px] font-medium tracking-wide text-foreground sm:text-[24px]">
@@ -98,8 +98,8 @@ function LoginCard({ onSignIn }: { onSignIn: (u: string, p: string) => Promise<v
           <img
             src={logo}
             alt="Jhaymarts emblem"
-            width={816}
-            height={816}
+            width={512}
+            height={512}
             className="h-[64px] w-[64px] object-contain"
           />
           <h1 className="mt-[10px] text-[18px] font-medium text-foreground">
