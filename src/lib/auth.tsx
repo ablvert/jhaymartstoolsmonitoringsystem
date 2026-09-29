@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { Profile } from "./domain";
-import { authPassword, usernameToEmail } from "./bootstrap.functions";
+import { authPassword, DEFAULT_ADMIN_USERNAME, ensureDefaultAdmin, usernameToEmail } from "./bootstrap.functions";
 
 type AuthValue = {
   session: Session | null;

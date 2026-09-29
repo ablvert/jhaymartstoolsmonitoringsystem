@@ -5,7 +5,7 @@ import { nameById, useAreas, useDepartments, useTools, useTransfers } from "@/li
 import { toolStatus } from "@/lib/domain";
 
 export const Route = createFileRoute("/_authenticated/search")({
-  validateSearch: (s: Record<string, unknown>): { q?: string } => ({ q: typeof s.q === "string" ? s.q : undefined }),
+  validateSearch: (s: Record<string, unknown>): { q?: string | undefined } => ({ q: typeof s["q"] === "string" ? s["q"] : undefined }),
   head: () => ({
     meta: [
       { title: "Search tools — Jhaymarts Tools Management System" },

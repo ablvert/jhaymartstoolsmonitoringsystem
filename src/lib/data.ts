@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Area, Department, Profile, Tool, ToolReturn, Transfer } from "./domain";
 
 async function selectAll<T>(table: string, order: string, ascending = true) {
-  const { data, error } = await supabase.from(table).select("*").order(order, { ascending });
+  const { data, error } = await (supabase as any).from(table).select("*").order(order, { ascending });
   if (error) throw new Error(error.message);
   return (data ?? []) as T[];
 }
