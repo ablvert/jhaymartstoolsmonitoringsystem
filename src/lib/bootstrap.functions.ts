@@ -46,7 +46,7 @@ export const ensureDefaultAdmin = createServerFn({ method: "POST" }).handler(asy
         }
         return { created: true };
       }
-      return { created: false };
+      return { created: false, debug: "profile-ok-password-changed" };
     }
     // Orphan profile without a sign-in account: remove and recreate below.
     await supabaseAdmin.from("user_roles").delete().eq("user_id", existing.id);
