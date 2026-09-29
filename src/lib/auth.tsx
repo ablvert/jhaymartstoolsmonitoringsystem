@@ -80,7 +80,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (username: string, password: string) => {
       const email = usernameToEmail(username);
       const { data, error } = await supabase.auth.signInWithPassword({ email, password: authPassword(password) });
-      if (error || !data.user) throw new Error("Invalid username or password");
+      if (error || !data.user) {
+        const msg = error?.message ?? "";
+        if (/invalid login credentials/i.test(msg)) throw new Error("Invalid username or password");
+        throw new Error(msg ? `Sign-in failed: ${msg}` : "Sign-in failed. Please try again.");
+      }
 
       const { data: prof } = await supabase
         .from("profiles")
