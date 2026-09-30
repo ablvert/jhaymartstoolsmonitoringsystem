@@ -22,7 +22,7 @@ export const Route = createFileRoute("/_authenticated/users")({
   component: Users,
 });
 
-type Form = { id?: string; fullName: string; username: string; password: string; role: "admin" | "user"; status: "Active" | "Inactive" };
+type Form = { id?: string; fullName: string; username: string; password: string; confirm: string; role: "admin" | "user"; status: "Active" | "Inactive" };
 
 function Users() {
   const { isAdmin, profile: me } = useAuth();
@@ -61,7 +61,7 @@ function Users() {
       <PageHeader
         title="User management"
         breadcrumb="Home / User management"
-        actions={<Button onClick={() => setForm({ fullName: "", username: "", password: "", role: "user", status: "Active" })}><Plus size={14} /> Add user</Button>}
+        actions={<Button onClick={() => setForm({ fullName: "", username: "", password: "", confirm: "", role: "user", status: "Active" })}><Plus size={14} /> Add user</Button>}
       />
       <Panel>
         <div className="overflow-x-auto">
@@ -76,7 +76,7 @@ function Users() {
                   <td><StatusBadge status={u.status} /></td>
                   <td>{formatDateTime(u.last_login)}</td>
                   <td className="text-right whitespace-nowrap">
-                    <Button variant="ghost" aria-label={`Edit ${u.username}`} onClick={() => setForm({ id: u.id, fullName: u.full_name, username: u.username, password: "", role: u.role, status: u.status as Form["status"] })}><Pencil size={14} /></Button>
+                    <Button variant="ghost" aria-label={`Edit ${u.username}`} onClick={() => setForm({ id: u.id, fullName: u.full_name, username: u.username, password: "", confirm: "", role: u.role, status: u.status as Form["status"] })}><Pencil size={14} /></Button>
                     <Button variant="ghost" aria-label={`Change password for ${u.username}`} onClick={() => setPw({ user: u, value: "" })}><KeyRound size={14} /></Button>
                     <Button variant="ghost" aria-label={`Delete ${u.username}`} disabled={u.id === me?.id} onClick={() => setDel(u)}><Trash2 size={14} className="text-danger" /></Button>
                   </td>
@@ -95,18 +95,25 @@ function Users() {
             onSubmit={(e) => {
               e.preventDefault();
               if (!form.fullName.trim() || !form.username.trim()) return notify("Full name and username are required", "error");
+              if (!form.id && form.password.length < 4) return notify("Password must be at least 4 characters", "error");
+              if (!form.id && form.password !== form.confirm) return notify("Password and confirm password do not match", "error");
               if (form.id) {
                 void run(() => updateFn({ data: { id: form.id!, fullName: form.fullName, username: form.username, role: form.role, status: form.status } }), "User updated", () => setForm(null));
               } else {
-                void run(() => createFn({ data: { fullName: form.fullName, username: form.username, password: form.password, role: form.role, status: form.status } }), "User added", () => setForm(null));
+                void run(() => createFn({ data: { fullName: form.fullName, username: form.username, password: form.password, role: form.role, status: form.status } }), "User created successfully.", () => setForm(null));
               }
             }}
           >
             <Field label="Full name" required><Input autoFocus value={form.fullName} onChange={(e) => set("fullName", e.target.value)} /></Field>
             <Field label="Username" required><Input value={form.username} onChange={(e) => set("username", e.target.value)} /></Field>
             {!form.id ? (
-              <Field label="Password" required hint="At least 4 characters. The user must change it on first login.">
-                <Input type="password" value={form.password} onChange={(e) => set("password", e.target.value)} />
+              <Field label="Password" required hint="At least 4 characters.">
+                <Input type="password" autoComplete="new-password" value={form.password} onChange={(e) => set("password", e.target.value)} />
+              </Field>
+            ) : null}
+            {!form.id ? (
+              <Field label="Confirm password" required>
+                <Input type="password" autoComplete="new-password" value={form.confirm} onChange={(e) => set("confirm", e.target.value)} />
               </Field>
             ) : null}
             <Field label="Role">
