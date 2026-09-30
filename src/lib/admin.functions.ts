@@ -59,7 +59,11 @@ export const adminCreateUser = createServerFn({ method: "POST" })
     const { error: roleErr } = await supabaseAdmin
       .from("user_roles")
       .insert({ user_id: created.user.id, role: data.role === "admin" ? "admin" : "user" });
-    if (roleErr) throw new Error(`Could not save the user role: ${roleErr.message}`);
+    if (roleErr) {
+      await supabaseAdmin.from("profiles").delete().eq("id", created.user.id);
+      await supabaseAdmin.auth.admin.deleteUser(created.user.id);
+      throw new Error(`Could not save the user role: ${roleErr.message}`);
+    }
 
     return { id: created.user.id };
   });
