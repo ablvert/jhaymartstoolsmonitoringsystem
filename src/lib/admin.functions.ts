@@ -20,7 +20,7 @@ type NewUser = {
 
 export const adminCreateUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: NewUser) => input)
+  .validator((input: NewUser) => input)
   .handler(async ({ data, context }) => {
     await assertAdmin(context as any);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -70,7 +70,7 @@ export const adminCreateUser = createServerFn({ method: "POST" })
 
 export const adminUpdateUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     (input: {
       id: string;
       fullName: string;
@@ -120,7 +120,7 @@ export const adminUpdateUser = createServerFn({ method: "POST" })
 
 export const adminSetPassword = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { id: string; password: string }) => input)
+  .validator((input: { id: string; password: string }) => input)
   .handler(async ({ data, context }) => {
     await assertAdmin(context as any);
     if (!data.password || data.password.length < 4) {
@@ -137,7 +137,7 @@ export const adminSetPassword = createServerFn({ method: "POST" })
 
 export const adminDeleteUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { id: string }) => input)
+  .validator((input: { id: string }) => input)
   .handler(async ({ data, context }) => {
     await assertAdmin(context as any);
     if (data.id === (context as any).userId) {
@@ -180,7 +180,7 @@ type BackupPayload = {
 
 export const adminRestoreBackup = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { backup: BackupPayload }) => input)
+  .validator((input: { backup: BackupPayload }) => input)
   .handler(async ({ data, context }) => {
     await assertAdmin(context as any);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

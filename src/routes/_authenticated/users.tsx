@@ -50,7 +50,25 @@ function Users() {
       done();
       refresh();
     } catch (e) {
-      notify((e as Error).message, "error");
+      const raw = (e as Error).message ?? String(e);
+      // "Invariant failed" is a TanStack framework error that surfaces when the
+      // server-function endpoint returns a response the client cannot decode
+      // (e.g. a plain-text 403 from CSRF check, or a 405 from a static host).
+      // Translate it into an actionable message instead of exposing the internal term.
+      let msg = raw;
+      if (
+        raw === "Invariant failed" ||
+        raw.toLowerCase().includes("invariant") ||
+        raw.toLowerCase().includes("content-type")
+      ) {
+        msg =
+          "Could not reach the server. Please make sure you are signed in and try again. " +
+          "If the problem persists, reload the page.";
+      } else if (raw === "Forbidden" || raw.toLowerCase().includes("forbidden")) {
+        msg =
+          "Access denied. Your session may have expired — please sign out and sign in again.";
+      }
+      notify(msg, "error");
     } finally {
       setBusy(false);
     }
