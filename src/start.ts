@@ -10,10 +10,19 @@ const errorMiddleware = createMiddleware().server(async ({ next, request }) => {
     if (error != null && typeof error === "object" && "statusCode" in error) {
       throw error;
     }
-    // Server-function errors must reach the client as real errors; replacing
-    // them with an HTML page makes the client fail with "Invariant failed".
+    // Server-function errors must reach the client as decodable JSON; an HTML
+    // error page or a rethrown plain Error makes the client decoder fail with
+    // "Invariant failed" instead of showing the real message.
     if (new URL(request.url).pathname.includes("/_serverFn/")) {
-      throw error;
+      if (error instanceof Response) throw error;
+      if (error != null && typeof error === "object" && ("isRedirect" in error || "isNotFound" in error)) {
+        throw error;
+      }
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Response(JSON.stringify({ error: message }), {
+        status: 500,
+        headers: { "content-type": "application/json; charset=utf-8" },
+      });
     }
     console.error(error);
     return new Response(renderErrorPage(), {
