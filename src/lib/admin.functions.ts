@@ -44,15 +44,22 @@ export const adminCreateUser = createServerFn({ method: "POST" })
     });
     if (error || !created.user) throw new Error(error?.message ?? "Could not create the account");
 
-    await supabaseAdmin.from("profiles").insert({
+    const { error: profErr } = await supabaseAdmin.from("profiles").insert({
       id: created.user.id,
-      full_name: data.fullName,
+      full_name: data.fullName.trim(),
       username,
-      role: data.role,
-      status: data.status,
+      role: data.role === "admin" ? "admin" : "user",
+      status: data.status === "Inactive" ? "Inactive" : "Active",
       must_change_password: false,
     });
-    await supabaseAdmin.from("user_roles").insert({ user_id: created.user.id, role: data.role });
+    if (profErr) {
+      await supabaseAdmin.auth.admin.deleteUser(created.user.id);
+      throw new Error(`Could not save the user profile: ${profErr.message}`);
+    }
+    const { error: roleErr } = await supabaseAdmin
+      .from("user_roles")
+      .insert({ user_id: created.user.id, role: data.role === "admin" ? "admin" : "user" });
+    if (roleErr) throw new Error(`Could not save the user role: ${roleErr.message}`);
 
     return { id: created.user.id };
   });

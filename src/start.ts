@@ -3,11 +3,16 @@ import { createStart, createCsrfMiddleware, createMiddleware } from "@tanstack/r
 import { renderErrorPage } from "./lib/error-page";
 import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
 
-const errorMiddleware = createMiddleware().server(async ({ next }) => {
+const errorMiddleware = createMiddleware().server(async ({ next, request }) => {
   try {
     return await next();
   } catch (error) {
     if (error != null && typeof error === "object" && "statusCode" in error) {
+      throw error;
+    }
+    // Server-function errors must reach the client as real errors; replacing
+    // them with an HTML page makes the client fail with "Invariant failed".
+    if (new URL(request.url).pathname.includes("/_serverFn/")) {
       throw error;
     }
     console.error(error);

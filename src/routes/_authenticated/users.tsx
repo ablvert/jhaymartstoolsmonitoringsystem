@@ -6,7 +6,8 @@ import { Button, EmptyRow, Field, Input, Modal, PageHeader, Panel, Select, Statu
 import { useToast } from "@/components/toast";
 import { adminCreateUser, adminDeleteUser, adminSetPassword, adminUpdateUser } from "@/lib/admin.functions";
 import { useAuth } from "@/lib/auth";
-import { useProfiles, useRefreshAll } from "@/lib/data";
+import { useProfiles } from "@/lib/data";
+import { useQueryClient } from "@tanstack/react-query";
 import type { Profile } from "@/lib/domain";
 import { formatDateTime } from "@/lib/format";
 
@@ -27,7 +28,8 @@ type Form = { id?: string; fullName: string; username: string; password: string;
 function Users() {
   const { isAdmin, profile: me } = useAuth();
   const { data: users = [] } = useProfiles();
-  const refresh = useRefreshAll();
+  const qc = useQueryClient();
+  const refresh = () => void qc.invalidateQueries({ queryKey: ["profiles"] });
   const { notify } = useToast();
   const createFn = useServerFn(adminCreateUser);
   const updateFn = useServerFn(adminUpdateUser);
