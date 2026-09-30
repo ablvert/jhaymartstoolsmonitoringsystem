@@ -10,6 +10,8 @@ export type Tool = {
   unit_cost: number;
   department_id: string | null;
   area_id: string | null;
+  current_department_id: string | null;
+  current_area_id: string | null;
   date_purchased: string | null;
   supplier: string | null;
   needs_repair: boolean;
@@ -23,6 +25,7 @@ export type Transfer = {
   returned_quantity: number;
   transfer_from_department_id: string | null;
   transfer_to_department_id: string | null;
+  transfer_to_area_id: string | null;
   borrowed_by: string;
   borrowed_at: string;
   expected_return_at: string;
@@ -36,6 +39,7 @@ export type ToolReturn = {
   tool_id: string;
   transfer_id: string | null;
   department_id: string | null;
+  area_id: string | null;
   quantity: number;
   returned_by: string;
   received_by: string;

@@ -1,11 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { KeyRound, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button, EmptyRow, Field, Input, Modal, PageHeader, Panel, Select, StatusBadge } from "@/components/ui";
 import { useToast } from "@/components/toast";
-import { adminCreateUser, adminDeleteUser, adminSetPassword, adminUpdateUser } from "@/lib/admin.functions";
-import { frontendAdminCreateUser } from "@/lib/frontend-admin";
+import { frontendAdminCreateUser, frontendAdminUpdateUser, frontendAdminSetPassword, frontendAdminDeleteUser } from "@/lib/frontend-admin";
 import { useAuth } from "@/lib/auth";
 import { useProfiles } from "@/lib/data";
 import { useQueryClient } from "@tanstack/react-query";
@@ -32,9 +30,6 @@ function Users() {
   const qc = useQueryClient();
   const refresh = () => void qc.invalidateQueries({ queryKey: ["profiles"] });
   const { notify } = useToast();
-  const updateFn = useServerFn(adminUpdateUser);
-  const pwFn = useServerFn(adminSetPassword);
-  const delFn = useServerFn(adminDeleteUser);
   const [form, setForm] = useState<Form | null>(null);
   const [pw, setPw] = useState<{ user: Profile; value: string } | null>(null);
   const [del, setDel] = useState<Profile | null>(null);
@@ -104,7 +99,7 @@ function Users() {
               const safeRole = form.role === "admin" ? "admin" : "user";
               const safeStatus = form.status === "Inactive" ? "Inactive" : "Active";
               if (form.id) {
-                void run(() => updateFn({ data: { id: form.id!, fullName: form.fullName, username: form.username, role: safeRole, status: safeStatus } }), "User updated", () => setForm(null));
+                void run(() => frontendAdminUpdateUser({ id: form.id!, fullName: form.fullName, username: form.username, role: safeRole, status: safeStatus }), "User updated", () => setForm(null));
               } else {
                 void run(() => frontendAdminCreateUser({ fullName: form.fullName, username: form.username, password: form.password, role: safeRole, status: safeStatus }), "User created successfully.", () => setForm(null));
               }
@@ -141,7 +136,7 @@ function Users() {
       </Modal>
 
       <Modal open={!!pw} title={`Change password — ${pw?.user.username ?? ""}`} onClose={() => setPw(null)}>
-        <form className="flex flex-col gap-[10px]" onSubmit={(e) => { e.preventDefault(); if (pw) void run(() => pwFn({ data: { id: pw.user.id, password: pw.value } }), "Password changed", () => setPw(null)); }}>
+        <form className="flex flex-col gap-[10px]" onSubmit={(e) => { e.preventDefault(); if (pw) void run(() => frontendAdminSetPassword({ id: pw.user.id, password: pw.value }), "Password changed", () => setPw(null)); }}>
           <Field label="New password" required hint="At least 4 characters">
             <Input type="password" autoFocus value={pw?.value ?? ""} onChange={(e) => setPw((p) => (p ? { ...p, value: e.target.value } : p))} />
           </Field>
@@ -156,7 +151,7 @@ function Users() {
         <p className="text-[13px]">Delete user <strong>{del?.username}</strong>? This cannot be undone.</p>
         <div className="mt-[14px] flex justify-end gap-[6px]">
           <Button variant="secondary" onClick={() => setDel(null)}>Cancel</Button>
-          <Button variant="danger" disabled={busy} onClick={() => del && void run(() => delFn({ data: { id: del.id } }), "User deleted", () => setDel(null))}>Delete</Button>
+          <Button variant="danger" disabled={busy} onClick={() => del && void run(() => frontendAdminDeleteUser({ id: del.id }), "User deleted", () => setDel(null))}>Delete</Button>
         </div>
       </Modal>
     </div>

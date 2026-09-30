@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Download } from "lucide-react";
 import { Button, EmptyRow, Field, Input, PageHeader, Panel, PanelHeader, Select, StatusBadge, Textarea } from "@/components/ui";
 import { useToast } from "@/components/toast";
-import { nameById, useDepartments, useRefreshAll, useTools, useTransfers } from "@/lib/data";
+import { nameById, useAreas, useDepartments, useRefreshAll, useTools, useTransfers } from "@/lib/data";
 import { transferStatus } from "@/lib/domain";
 import { formatDateTime, nowLocalInput } from "@/lib/format";
 import { recordTransfer } from "@/lib/mutations";
@@ -25,29 +25,33 @@ function TransferPage() {
   const { data: tools = [] } = useTools();
   const { data: transfers = [] } = useTransfers();
   const { data: departments = [] } = useDepartments();
+  const { data: areas = [] } = useAreas();
   const refresh = useRefreshAll();
   const { notify } = useToast();
 
   const blank = () => ({
-    toolId: "", quantity: "1", toId: "", borrowedBy: "", borrowedAt: nowLocalInput(),
+    toolId: "", quantity: "1", fromId: "", toId: "", toAreaId: "", borrowedBy: "", borrowedAt: nowLocalInput(),
     expected: "", description: "", reason: "",
   });
   const [f, setF] = useState(blank);
   const [busy, setBusy] = useState(false);
   const [q, setQ] = useState("");
+  
   const tool = tools.find((t) => t.id === f.toolId);
   const set = (k: keyof ReturnType<typeof blank>, v: string) => setF((p) => ({ ...p, [k]: v }));
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!tool) return notify("Select a tool", "error");
+    if (!f.fromId) return notify("Select the source department", "error");
     if (!f.toId) return notify("Select the destination department", "error");
+    if (!f.toAreaId) return notify("Select the destination area", "error");
     if (!f.borrowedBy.trim()) return notify("Borrowed by is required", "error");
     if (!f.expected) return notify("Expected return date is required", "error");
     setBusy(true);
     try {
       await recordTransfer({
-        tool, quantity: Number(f.quantity), fromId: tool.department_id, toId: f.toId,
+        tool, quantity: Number(f.quantity), fromId: f.fromId, toId: f.toId, toAreaId: f.toAreaId,
         borrowedBy: f.borrowedBy, borrowedAt: f.borrowedAt, expectedReturnAt: f.expected,
         description: f.description, reason: f.reason,
       });
@@ -73,7 +77,14 @@ function TransferPage() {
           <PanelHeader title="New transfer" />
           <form onSubmit={submit} className="flex flex-col gap-[10px] p-[12px]">
             <Field label="Tool" required>
-              <Select value={f.toolId} onChange={(e) => set("toolId", e.target.value)}>
+              <Select value={f.toolId} onChange={(e) => {
+                const newTool = tools.find(t => t.id === e.target.value);
+                setF(prev => ({ 
+                  ...prev, 
+                  toolId: e.target.value, 
+                  fromId: newTool?.current_department_id || newTool?.department_id || "" 
+                }));
+              }}>
                 <option value="">Select tool</option>
                 {tools.map((t) => (
                   <option key={t.id} value={t.id} disabled={t.available_quantity < 1}>
@@ -82,14 +93,27 @@ function TransferPage() {
                 ))}
               </Select>
             </Field>
-            <Field label="Transfer from" hint="The tool's home department">
-              <Input value={tool ? nameById(departments, tool.department_id) : ""} readOnly />
+            <Field label="Transfer from" required hint="The tool's current department">
+              <Select value={f.fromId} onChange={(e) => set("fromId", e.target.value)}>
+                <option value="">Select department</option>
+                {departments.map((d) => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
+              </Select>
             </Field>
             <Field label="Transfer to" required>
               <Select value={f.toId} onChange={(e) => set("toId", e.target.value)}>
                 <option value="">Select department</option>
-                {departments.filter((d) => d.id !== tool?.department_id).map((d) => (
+                {departments.filter((d) => d.id !== f.fromId).map((d) => (
                   <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Transfer to area" required>
+              <Select value={f.toAreaId} onChange={(e) => set("toAreaId", e.target.value)}>
+                <option value="">Select area</option>
+                {areas.map((a) => (
+                  <option key={a.id} value={a.id}>{a.name}</option>
                 ))}
               </Select>
             </Field>
@@ -124,6 +148,7 @@ function TransferPage() {
                 <Button variant="secondary" onClick={() => exportToExcel(rows.map((t) => ({
                   Tool: nameById(tools as any, t.tool_id), Quantity: t.quantity, Returned: t.returned_quantity,
                   From: nameById(departments, t.transfer_from_department_id), To: nameById(departments, t.transfer_to_department_id),
+                  "To Area": nameById(areas, t.transfer_to_area_id),
                   "Borrowed by": t.borrowed_by, "Borrowed at": formatDateTime(t.borrowed_at),
                   "Expected return": formatDateTime(t.expected_return_at), Status: transferStatus(t),
                 })), "Transfers", "jhaymarts-transfers")}>
@@ -137,7 +162,7 @@ function TransferPage() {
               <thead>
                 <tr>
                   <th scope="col">Tool</th><th scope="col">Qty</th><th scope="col">Returned</th>
-                  <th scope="col">From</th><th scope="col">To</th><th scope="col">Borrowed by</th>
+                  <th scope="col">From</th><th scope="col">To</th><th scope="col">To Area</th><th scope="col">Borrowed by</th>
                   <th scope="col">Borrowed</th><th scope="col">Expected return</th><th scope="col">Status</th>
                 </tr>
               </thead>
@@ -148,13 +173,14 @@ function TransferPage() {
                     <td>{t.quantity}</td><td>{t.returned_quantity}</td>
                     <td>{nameById(departments, t.transfer_from_department_id)}</td>
                     <td>{nameById(departments, t.transfer_to_department_id)}</td>
+                    <td>{nameById(areas, t.transfer_to_area_id)}</td>
                     <td>{t.borrowed_by}</td>
                     <td>{formatDateTime(t.borrowed_at)}</td>
                     <td>{formatDateTime(t.expected_return_at)}</td>
                     <td><StatusBadge status={transferStatus(t)} /></td>
                   </tr>
                 ))}
-                {rows.length === 0 ? <EmptyRow colSpan={9} label="No transfers recorded" /> : null}
+                {rows.length === 0 ? <EmptyRow colSpan={10} label="No transfers recorded" /> : null}
               </tbody>
             </table>
           </div>
