@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import { PageHeader, Panel, PanelHeader, EmptyRow, StatusBadge } from "@/components/ui";
 import { nameById, useAreas, useDepartments, useReturns, useTools, useTransfers } from "@/lib/data";
 import { isOverdue, toolStatus } from "@/lib/domain";
+import { useAuth } from "@/lib/auth";
 import { durationSince, formatDateTime, formatMoney } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -20,7 +21,15 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
 });
 
+function greeting(d = new Date()) {
+  const h = d.getHours();
+  if (h >= 5 && h < 12) return "Good Morning";
+  if (h >= 12 && h < 18) return "Good Afternoon";
+  return "Good Evening";
+}
+
 function Dashboard() {
+  const { profile } = useAuth();
   const { data: tools = [] } = useTools();
   const { data: transfers = [] } = useTransfers();
   const { data: returns = [] } = useReturns();
@@ -59,6 +68,12 @@ function Dashboard() {
 
   return (
     <div>
+      <div className="mb-[14px]">
+        <h2 className="text-[26px] font-medium text-foreground">
+          {greeting()} {profile?.full_name || profile?.username || ""}
+        </h2>
+        <p className="text-[13px] text-muted-foreground">Welcome back to Jhaymarts Tools Management System.</p>
+      </div>
       <PageHeader
         title="Dashboard"
         breadcrumb="Home / Dashboard"
