@@ -58,6 +58,7 @@ export async function recordReturn(input: {
   tool: Tool;
   quantity: number;
   returnedBy: string;
+  receivedBy: string;
   returnedAt: string;
   condition: string;
   notes: string;
@@ -76,6 +77,7 @@ export async function recordReturn(input: {
       department_id: transfer.transfer_from_department_id,
       quantity: input.quantity,
       returned_by: input.returnedBy.trim(),
+      received_by: input.receivedBy.trim(),
       returned_at: new Date(input.returnedAt).toISOString(),
       condition: input.condition,
       notes: input.notes || null,

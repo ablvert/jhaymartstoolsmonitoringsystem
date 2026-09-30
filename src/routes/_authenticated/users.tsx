@@ -99,10 +99,12 @@ function Users() {
               if (!form.fullName.trim() || !form.username.trim()) return notify("Full name and username are required", "error");
               if (!form.id && form.password.length < 4) return notify("Password must be at least 4 characters", "error");
               if (!form.id && form.password !== form.confirm) return notify("Password and confirm password do not match", "error");
+              const safeRole = form.role === "admin" ? "admin" : "user";
+              const safeStatus = form.status === "Inactive" ? "Inactive" : "Active";
               if (form.id) {
-                void run(() => updateFn({ data: { id: form.id!, fullName: form.fullName, username: form.username, role: form.role, status: form.status } }), "User updated", () => setForm(null));
+                void run(() => updateFn({ data: { id: form.id!, fullName: form.fullName, username: form.username, role: safeRole, status: safeStatus } }), "User updated", () => setForm(null));
               } else {
-                void run(() => createFn({ data: { fullName: form.fullName, username: form.username, password: form.password, role: form.role, status: form.status } }), "User created successfully.", () => setForm(null));
+                void run(() => createFn({ data: { fullName: form.fullName, username: form.username, password: form.password, role: safeRole, status: safeStatus } }), "User created successfully.", () => setForm(null));
               }
             }}
           >
@@ -119,13 +121,13 @@ function Users() {
               </Field>
             ) : null}
             <Field label="Role">
-              <Select value={form.role} onChange={(e) => set("role", e.target.value)}>
+              <Select value={form.role || "user"} onChange={(e) => set("role", e.target.value)}>
                 <option value="user">User</option><option value="admin">Administrator</option>
               </Select>
             </Field>
             <Field label="Status">
-              <Select value={form.status} onChange={(e) => set("status", e.target.value)}>
-                <option>Active</option><option>Inactive</option>
+              <Select value={form.status || "Active"} onChange={(e) => set("status", e.target.value)}>
+                <option value="Active">Active</option><option value="Inactive">Inactive</option>
               </Select>
             </Field>
             <div className="flex justify-end gap-[6px]">

@@ -26,7 +26,7 @@ function ReturnsPage() {
   const refresh = useRefreshAll();
   const { notify } = useToast();
 
-  const blank = () => ({ transferId: "", quantity: "1", returnedBy: "", returnedAt: nowLocalInput(), condition: "Good", notes: "" });
+  const blank = () => ({ transferId: "", quantity: "1", returnedBy: "", receivedBy: "", returnedAt: nowLocalInput(), condition: "Good", notes: "" });
   const [f, setF] = useState(blank);
   const [busy, setBusy] = useState(false);
   const set = (k: keyof ReturnType<typeof blank>, v: string) => setF((p) => ({ ...p, [k]: v }));
@@ -39,11 +39,12 @@ function ReturnsPage() {
     e.preventDefault();
     if (!transfer) return notify("Select a borrowed tool", "error");
     if (!f.returnedBy.trim()) return notify("Returned by is required", "error");
+    if (!f.receivedBy.trim()) return notify("Received by is required", "error");
     const tool = tools.find((t) => t.id === transfer.tool_id);
     if (!tool) return notify("Tool not found", "error");
     setBusy(true);
     try {
-      await recordReturn({ transfer, tool, quantity: Number(f.quantity), returnedBy: f.returnedBy, returnedAt: f.returnedAt, condition: f.condition, notes: f.notes });
+      await recordReturn({ transfer, tool, quantity: Number(f.quantity), returnedBy: f.returnedBy, receivedBy: f.receivedBy, returnedAt: f.returnedAt, condition: f.condition, notes: f.notes });
       notify("Return recorded");
       setF(blank());
       refresh();
@@ -82,6 +83,9 @@ function ReturnsPage() {
             <Field label="Returned by" required>
               <Input value={f.returnedBy} onChange={(e) => set("returnedBy", e.target.value)} />
             </Field>
+            <Field label="Received by" required>
+              <Input value={f.receivedBy} onChange={(e) => set("receivedBy", e.target.value)} />
+            </Field>
             <Field label="Date & time returned" required>
               <Input type="datetime-local" value={f.returnedAt} onChange={(e) => set("returnedAt", e.target.value)} />
             </Field>
@@ -101,7 +105,7 @@ function ReturnsPage() {
           <div className="overflow-x-auto">
             <table className="data-table">
               <thead>
-                <tr><th scope="col">Tool</th><th scope="col">Qty</th><th scope="col">Returned to</th><th scope="col">Returned by</th><th scope="col">Date &amp; time</th><th scope="col">Condition</th><th scope="col">Notes</th></tr>
+                <tr><th scope="col">Tool</th><th scope="col">Qty</th><th scope="col">Returned to</th><th scope="col">Returned by</th><th scope="col">Received by</th><th scope="col">Date &amp; time</th><th scope="col">Condition</th><th scope="col">Notes</th></tr>
               </thead>
               <tbody>
                 {returns.map((r) => (
@@ -110,12 +114,13 @@ function ReturnsPage() {
                     <td>{r.quantity}</td>
                     <td>{nameById(departments, r.department_id)}</td>
                     <td>{r.returned_by}</td>
+                    <td>{r.received_by}</td>
                     <td>{formatDateTime(r.returned_at)}</td>
                     <td><StatusBadge status={r.condition} /></td>
                     <td>{r.notes ?? "—"}</td>
                   </tr>
                 ))}
-                {returns.length === 0 ? <EmptyRow colSpan={7} label="No returns recorded" /> : null}
+                {returns.length === 0 ? <EmptyRow colSpan={8} label="No returns recorded" /> : null}
               </tbody>
             </table>
           </div>

@@ -81,6 +81,7 @@ CREATE TABLE public.tool_returns (
   department_id uuid REFERENCES public.departments(id) ON DELETE SET NULL,
   quantity integer NOT NULL CHECK (quantity > 0),
   returned_by text NOT NULL,
+  received_by text NOT NULL,
   returned_at timestamptz NOT NULL DEFAULT now(),
   condition text NOT NULL DEFAULT 'Good',
   notes text,
@@ -210,12 +211,12 @@ FROM (VALUES
 ) AS v(tool, qty, retq, dfrom, dto, who, borrowed_days, due_days, descr, reason, status);
 
 -- seed returns
-INSERT INTO public.tool_returns (tool_id, transfer_id, department_id, quantity, returned_by, returned_at, condition, notes)
-SELECT tr.tool_id, tr.id, tr.transfer_to_department_id, v.qty, v.who, now() - (v.days || ' days')::interval, v.cond, v.notes
+INSERT INTO public.tool_returns (tool_id, transfer_id, department_id, quantity, returned_by, received_by, returned_at, condition, notes)
+SELECT tr.tool_id, tr.id, tr.transfer_to_department_id, v.qty, v.who, v.receiver, now() - (v.days || ' days')::interval, v.cond, v.notes
 FROM (VALUES
-  ('Welding Machine',1,'Ana Lopez',13,'Good','Returned after tank repair completion'),
-  ('Pipe Cutter',1,'Rico Santos',2,'Needs Repair','One cutter blade is dull and needs replacement')
-) AS v(tool, qty, who, days, cond, notes)
+  ('Welding Machine',1,'Ana Lopez','System Admin',13,'Good','Returned after tank repair completion'),
+  ('Pipe Cutter',1,'Rico Santos','System Admin',2,'Needs Repair','One cutter blade is dull and needs replacement')
+) AS v(tool, qty, who, receiver, days, cond, notes)
 JOIN public.tools t ON t.name = v.tool
 JOIN public.tool_transfers tr ON tr.tool_id = t.id;
 

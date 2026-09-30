@@ -38,6 +38,7 @@ export type ToolReturn = {
   department_id: string | null;
   quantity: number;
   returned_by: string;
+  received_by: string;
   returned_at: string;
   condition: string;
   notes: string | null;
