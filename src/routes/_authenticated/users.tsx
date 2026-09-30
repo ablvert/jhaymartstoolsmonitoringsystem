@@ -5,6 +5,7 @@ import { KeyRound, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button, EmptyRow, Field, Input, Modal, PageHeader, Panel, Select, StatusBadge } from "@/components/ui";
 import { useToast } from "@/components/toast";
 import { adminCreateUser, adminDeleteUser, adminSetPassword, adminUpdateUser } from "@/lib/admin.functions";
+import { frontendAdminCreateUser } from "@/lib/frontend-admin";
 import { useAuth } from "@/lib/auth";
 import { useProfiles } from "@/lib/data";
 import { useQueryClient } from "@tanstack/react-query";
@@ -31,7 +32,6 @@ function Users() {
   const qc = useQueryClient();
   const refresh = () => void qc.invalidateQueries({ queryKey: ["profiles"] });
   const { notify } = useToast();
-  const createFn = useServerFn(adminCreateUser);
   const updateFn = useServerFn(adminUpdateUser);
   const pwFn = useServerFn(adminSetPassword);
   const delFn = useServerFn(adminDeleteUser);
@@ -50,25 +50,9 @@ function Users() {
       done();
       refresh();
     } catch (e) {
+      console.error("Save user error:", e);
       const raw = (e as Error).message ?? String(e);
-      // "Invariant failed" is a TanStack framework error that surfaces when the
-      // server-function endpoint returns a response the client cannot decode
-      // (e.g. a plain-text 403 from CSRF check, or a 405 from a static host).
-      // Translate it into an actionable message instead of exposing the internal term.
-      let msg = raw;
-      if (
-        raw === "Invariant failed" ||
-        raw.toLowerCase().includes("invariant") ||
-        raw.toLowerCase().includes("content-type")
-      ) {
-        msg =
-          "Could not reach the server. Please make sure you are signed in and try again. " +
-          "If the problem persists, reload the page.";
-      } else if (raw === "Forbidden" || raw.toLowerCase().includes("forbidden")) {
-        msg =
-          "Access denied. Your session may have expired — please sign out and sign in again.";
-      }
-      notify(msg, "error");
+      notify(raw, "error");
     } finally {
       setBusy(false);
     }
@@ -122,7 +106,7 @@ function Users() {
               if (form.id) {
                 void run(() => updateFn({ data: { id: form.id!, fullName: form.fullName, username: form.username, role: safeRole, status: safeStatus } }), "User updated", () => setForm(null));
               } else {
-                void run(() => createFn({ data: { fullName: form.fullName, username: form.username, password: form.password, role: safeRole, status: safeStatus } }), "User created successfully.", () => setForm(null));
+                void run(() => frontendAdminCreateUser({ fullName: form.fullName, username: form.username, password: form.password, role: safeRole, status: safeStatus }), "User created successfully.", () => setForm(null));
               }
             }}
           >
