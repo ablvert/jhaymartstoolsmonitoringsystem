@@ -191,7 +191,7 @@ function Inventory() {
           </Select>
           <span className="ml-auto self-center text-[12px] text-muted-foreground">{rows.length} record(s)</span>
         </div>
-        <div className="overflow-x-auto">
+        <div className="max-h-[calc(100vh-240px)] overflow-auto">
           <table className="data-table">
             <thead>
               <tr>

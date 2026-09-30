@@ -20,9 +20,9 @@ export function OverdueAlert({
   const navigate = useNavigate();
 
   return (
-    <Modal open={open} title="Overdue tools alert" onClose={onClose} wide>
+    <Modal open={open} title="TOOLS DUE FOR RETURN" onClose={onClose} wide>
       <p className="mb-[12px] text-[13px] text-muted-foreground">
-        The following tools are overdue and need to be returned to their original department.
+        The following tools should be returned to their original department.
       </p>
       <div className="max-h-[50vh] overflow-auto rounded-[6px] border border-border">
         <table className="data-table">
@@ -33,6 +33,7 @@ export function OverdueAlert({
               <th scope="col">Borrowed by</th>
               <th scope="col">Current dept.</th>
               <th scope="col">Original dept.</th>
+              <th scope="col">Date borrowed</th>
               <th scope="col">Expected return</th>
               <th scope="col">Overdue</th>
             </tr>
@@ -51,6 +52,7 @@ export function OverdueAlert({
                       RETURN TO ORIGINAL DEPARTMENT: {original.toUpperCase()}
                     </span>
                   </td>
+                  <td>{formatDateTime(t.borrowed_at)}</td>
                   <td>{formatDateTime(t.expected_return_at)}</td>
                   <td>
                     <StatusBadge status="Overdue" /> <span>{durationSince(t.expected_return_at)}</span>
@@ -63,7 +65,7 @@ export function OverdueAlert({
       </div>
       <div className="mt-[14px] flex justify-end gap-[6px]">
         <Button variant="secondary" onClick={onClose}>
-          Close
+          CLOSE
         </Button>
         <Button
           onClick={() => {
@@ -71,7 +73,7 @@ export function OverdueAlert({
             void navigate({ to: "/overdue" });
           }}
         >
-          View overdue tools
+          VIEW OVERDUE TOOLS
         </Button>
       </div>
     </Modal>
