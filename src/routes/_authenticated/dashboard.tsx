@@ -161,6 +161,7 @@ function Dashboard() {
                   <th scope="col">Qty</th>
                   <th scope="col">To</th>
                   <th scope="col">Borrowed by</th>
+                  <th scope="col">Released by</th>
                   <th scope="col">Date &amp; time</th>
                 </tr>
               </thead>
@@ -171,10 +172,11 @@ function Dashboard() {
                     <td>{t.quantity}</td>
                     <td>{nameById(departments, t.transfer_to_department_id)}</td>
                     <td>{t.borrowed_by}</td>
+                    <td>{t.released_by}</td>
                     <td>{formatDateTime(t.borrowed_at)}</td>
                   </tr>
                 ))}
-                {transfers.length === 0 ? <EmptyRow colSpan={5} label="No transfers recorded" /> : null}
+                {transfers.length === 0 ? <EmptyRow colSpan={6} label="No transfers recorded" /> : null}
               </tbody>
             </table>
           </div>
@@ -227,6 +229,7 @@ function Dashboard() {
                   <th scope="col">Tool</th>
                   <th scope="col">Qty</th>
                   <th scope="col">Borrowed by</th>
+                  <th scope="col">Released by</th>
                   <th scope="col">Original department</th>
                   <th scope="col">Current department</th>
                   <th scope="col">Expected return</th>
@@ -239,6 +242,7 @@ function Dashboard() {
                     <td className="font-medium">{nameById(tools as any, t.tool_id)}</td>
                     <td>{t.quantity - t.returned_quantity}</td>
                     <td>{t.borrowed_by}</td>
+                    <td>{t.released_by}</td>
                     <td className="font-medium text-danger">
                       {nameById(departments, t.transfer_from_department_id)}
                     </td>
@@ -248,7 +252,7 @@ function Dashboard() {
                   </tr>
                 ))}
                 {overdueList.length === 0 ? (
-                  <EmptyRow colSpan={7} label="No overdue tools. Everything is on schedule." />
+                  <EmptyRow colSpan={8} label="No overdue tools. Everything is on schedule." />
                 ) : null}
               </tbody>
             </table>

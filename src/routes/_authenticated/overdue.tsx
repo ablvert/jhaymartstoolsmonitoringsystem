@@ -33,7 +33,7 @@ function Overdue() {
         actions={
           <Button variant="secondary" onClick={() => exportToExcel(rows.map((t) => ({
             Tool: nameById(tools as any, t.tool_id), Quantity: t.quantity - t.returned_quantity,
-            "Borrowed by": t.borrowed_by, "Current department": nameById(departments, t.transfer_to_department_id),
+            "Borrowed by": t.borrowed_by, "Released by": t.released_by ?? "", "Current department": nameById(departments, t.transfer_to_department_id),
             "Original department": nameById(departments, t.transfer_from_department_id),
             "Expected return": formatDateTime(t.expected_return_at), "Overdue by": durationSince(t.expected_return_at),
           })), "Overdue tools", "jhaymarts-overdue-tools")}>
@@ -45,7 +45,7 @@ function Overdue() {
         <div className="overflow-x-auto">
           <table className="data-table">
             <thead>
-              <tr><th scope="col">Tool</th><th scope="col">Qty</th><th scope="col">Borrowed by</th><th scope="col">Current department</th><th scope="col">Return instruction</th><th scope="col">Expected return</th><th scope="col">Overdue by</th><th scope="col"></th></tr>
+              <tr><th scope="col">Tool</th><th scope="col">Qty</th><th scope="col">Borrowed by</th><th scope="col">Released by</th><th scope="col">Current department</th><th scope="col">Return instruction</th><th scope="col">Expected return</th><th scope="col">Overdue by</th><th scope="col"></th></tr>
             </thead>
             <tbody>
               {rows.map((t) => (
@@ -53,6 +53,7 @@ function Overdue() {
                   <td className="font-medium">{nameById(tools as any, t.tool_id)}</td>
                   <td>{t.quantity - t.returned_quantity}</td>
                   <td>{t.borrowed_by}</td>
+                  <td>{t.released_by}</td>
                   <td>{nameById(departments, t.transfer_to_department_id)}</td>
                   <td className="font-medium text-danger">
                     RETURN TO ORIGINAL DEPARTMENT: {nameById(departments, t.transfer_from_department_id).toUpperCase()}
@@ -62,7 +63,7 @@ function Overdue() {
                   <td><Link to="/returns" className="text-link hover:underline">Record return</Link></td>
                 </tr>
               ))}
-              {rows.length === 0 ? <EmptyRow colSpan={8} label="No overdue tools. Everything is on schedule." /> : null}
+              {rows.length === 0 ? <EmptyRow colSpan={9} label="No overdue tools. Everything is on schedule." /> : null}
             </tbody>
           </table>
         </div>

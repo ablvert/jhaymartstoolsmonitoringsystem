@@ -18,6 +18,7 @@ export async function recordTransfer(input: {
   toId: string;
   toAreaId: string;
   borrowedBy: string;
+  releasedBy: string;
   borrowedAt: string;
   expectedReturnAt: string;
   description: string;
@@ -41,6 +42,7 @@ export async function recordTransfer(input: {
       transfer_to_department_id: input.toId,
       transfer_to_area_id: input.toAreaId,
       borrowed_by: input.borrowedBy.trim(),
+      released_by: input.releasedBy.trim(),
       borrowed_at: new Date(input.borrowedAt).toISOString(),
       expected_return_at: new Date(input.expectedReturnAt).toISOString(),
       description: input.description || null,

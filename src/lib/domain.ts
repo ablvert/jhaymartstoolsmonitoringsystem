@@ -27,6 +27,7 @@ export type Transfer = {
   transfer_to_department_id: string | null;
   transfer_to_area_id: string | null;
   borrowed_by: string;
+  released_by: string | null;
   borrowed_at: string;
   expected_return_at: string;
   description: string | null;

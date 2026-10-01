@@ -30,7 +30,7 @@ function TransferPage() {
   const { notify } = useToast();
 
   const blank = () => ({
-    toolId: "", quantity: "1", fromId: "", toId: "", toAreaId: "", borrowedBy: "", borrowedAt: nowLocalInput(),
+    toolId: "", quantity: "1", fromId: "", toId: "", toAreaId: "", borrowedBy: "", releasedBy: "", borrowedAt: nowLocalInput(),
     expected: "", description: "", reason: "",
   });
   const [f, setF] = useState(blank);
@@ -47,12 +47,13 @@ function TransferPage() {
     if (!f.toId) return notify("Select the destination department", "error");
     if (!f.toAreaId) return notify("Select the destination area", "error");
     if (!f.borrowedBy.trim()) return notify("Borrowed by is required", "error");
+    if (!f.releasedBy.trim()) return notify("Released by is required", "error");
     if (!f.expected) return notify("Expected return date is required", "error");
     setBusy(true);
     try {
       await recordTransfer({
         tool, quantity: Number(f.quantity), fromId: f.fromId, toId: f.toId, toAreaId: f.toAreaId,
-        borrowedBy: f.borrowedBy, borrowedAt: f.borrowedAt, expectedReturnAt: f.expected,
+        borrowedBy: f.borrowedBy, releasedBy: f.releasedBy, borrowedAt: f.borrowedAt, expectedReturnAt: f.expected,
         description: f.description, reason: f.reason,
       });
       notify("Transfer recorded");
@@ -123,6 +124,9 @@ function TransferPage() {
             <Field label="Borrowed by" required>
               <Input value={f.borrowedBy} onChange={(e) => set("borrowedBy", e.target.value)} />
             </Field>
+            <Field label="Released by" required>
+              <Input value={f.releasedBy} onChange={(e) => set("releasedBy", e.target.value)} />
+            </Field>
             <Field label="Date & time borrowed" required>
               <Input type="datetime-local" value={f.borrowedAt} onChange={(e) => set("borrowedAt", e.target.value)} />
             </Field>
@@ -149,7 +153,7 @@ function TransferPage() {
                   Tool: nameById(tools as any, t.tool_id), Quantity: t.quantity, Returned: t.returned_quantity,
                   From: nameById(departments, t.transfer_from_department_id), To: nameById(departments, t.transfer_to_department_id),
                   "To Area": nameById(areas, t.transfer_to_area_id),
-                  "Borrowed by": t.borrowed_by, "Borrowed at": formatDateTime(t.borrowed_at),
+                  "Borrowed by": t.borrowed_by, "Released by": t.released_by ?? "", "Borrowed at": formatDateTime(t.borrowed_at),
                   "Expected return": formatDateTime(t.expected_return_at), Status: transferStatus(t),
                 })), "Transfers", "jhaymarts-transfers")}>
                   <Download size={14} /> Excel
@@ -162,7 +166,7 @@ function TransferPage() {
               <thead>
                 <tr>
                   <th scope="col">Tool</th><th scope="col">Qty</th><th scope="col">Returned</th>
-                  <th scope="col">From</th><th scope="col">To</th><th scope="col">To Area</th><th scope="col">Borrowed by</th>
+                  <th scope="col">From</th><th scope="col">To</th><th scope="col">To Area</th><th scope="col">Borrowed by</th><th scope="col">Released by</th>
                   <th scope="col">Borrowed</th><th scope="col">Expected return</th><th scope="col">Status</th>
                 </tr>
               </thead>
@@ -175,12 +179,13 @@ function TransferPage() {
                     <td>{nameById(departments, t.transfer_to_department_id)}</td>
                     <td>{nameById(areas, t.transfer_to_area_id)}</td>
                     <td>{t.borrowed_by}</td>
+                    <td>{t.released_by}</td>
                     <td>{formatDateTime(t.borrowed_at)}</td>
                     <td>{formatDateTime(t.expected_return_at)}</td>
                     <td><StatusBadge status={transferStatus(t)} /></td>
                   </tr>
                 ))}
-                {rows.length === 0 ? <EmptyRow colSpan={10} label="No transfers recorded" /> : null}
+                {rows.length === 0 ? <EmptyRow colSpan={11} label="No transfers recorded" /> : null}
               </tbody>
             </table>
           </div>

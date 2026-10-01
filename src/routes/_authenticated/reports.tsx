@@ -42,8 +42,10 @@ function Reports() {
       return transfers.map((t) => ({
         Tool: tn(t.tool_id), Quantity: t.quantity, Returned: t.returned_quantity,
         From: nameById(departments, t.transfer_from_department_id), To: nameById(departments, t.transfer_to_department_id),
-        "Borrowed by": t.borrowed_by, Borrowed: formatDateTime(t.borrowed_at),
-        "Expected return": formatDateTime(t.expected_return_at), Status: transferStatus(t),
+        "To Area": nameById(areas, t.transfer_to_area_id),
+        "Borrowed by": t.borrowed_by, "Released by": t.released_by ?? "",
+        Borrowed: formatDateTime(t.borrowed_at), "Expected return": formatDateTime(t.expected_return_at),
+        Reason: t.reason ?? "", Status: transferStatus(t),
       }));
     return returns.map((r) => ({
       Tool: tn(r.tool_id), Quantity: r.quantity, "Returned to": nameById(departments, r.department_id),

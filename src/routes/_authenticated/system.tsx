@@ -2,13 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { Button, Field, Input, Modal, PageHeader, Panel, PanelHeader } from "@/components/ui";
 import { useToast } from "@/components/toast";
-import { useServerFn } from "@tanstack/react-start";
-import { adminDeleteAllData, adminRestoreBackup } from "@/lib/admin.functions";
 import { useAuth, logActivity } from "@/lib/auth";
 import { useActivityLogs, useRefreshAll } from "@/lib/data";
 import { db } from "@/lib/mutations";
 import { downloadJson } from "@/lib/export";
 import { formatDateTime } from "@/lib/format";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/system")({
   head: () => ({
@@ -28,14 +27,13 @@ function SystemPage() {
   const { isAdmin } = useAuth();
   const { notify } = useToast();
   const refresh = useRefreshAll();
-  const restoreFn = useServerFn(adminRestoreBackup);
-  const deleteAllFn = useServerFn(adminDeleteAllData);
   const { data: logs = [] } = useActivityLogs(isAdmin);
   const fileRef = useRef<HTMLInputElement>(null);
   const [pending, setPending] = useState<any>(null);
   const [delOpen, setDelOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const [busy, setBusy] = useState(false);
+  const [migrateStatus, setMigrateStatus] = useState<string | null>(null);
 
   if (!isAdmin)
     return <Panel className="p-[16px] text-[13px]">Only administrators can access system maintenance.</Panel>;
@@ -65,7 +63,17 @@ function SystemPage() {
   async function restore() {
     setBusy(true);
     try {
-      await restoreFn({ data: { backup: pending } });
+      const b = pending;
+      if (!b || !Array.isArray(b.tools)) throw new Error("Invalid backup");
+      const wipe = "00000000-0000-0000-0000-000000000000";
+      for (const t of ["tool_returns", "tool_transfers", "tools", "departments", "areas"]) {
+        await db.from(t).delete().neq("id", wipe);
+      }
+      if (b.departments?.length) await db.from("departments").insert(b.departments);
+      if (b.areas?.length) await db.from("areas").insert(b.areas);
+      if (b.tools?.length) await db.from("tools").insert(b.tools);
+      if (b.tool_transfers?.length) await db.from("tool_transfers").insert(b.tool_transfers);
+      if (b.tool_returns?.length) await db.from("tool_returns").insert(b.tool_returns);
       await logActivity("Restore", "Restored system backup");
       notify("Backup restored");
       setPending(null);
@@ -80,7 +88,10 @@ function SystemPage() {
   async function deleteAll() {
     setBusy(true);
     try {
-      await deleteAllFn();
+      const wipe = "00000000-0000-0000-0000-000000000000";
+      await db.from("tool_returns").delete().neq("id", wipe);
+      await db.from("tool_transfers").delete().neq("id", wipe);
+      await db.from("tools").delete().neq("id", wipe);
       await logActivity("Delete all data", "All tools, transfers and returns deleted");
       notify("All data deleted");
       setDelOpen(false);
@@ -88,6 +99,26 @@ function SystemPage() {
       refresh();
     } catch (e) {
       notify((e as Error).message, "error");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function applyMigration() {
+    setBusy(true);
+    setMigrateStatus("Applying schema migration...");
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-ops", {
+        body: { action: "apply_migration", payload: {} },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      setMigrateStatus("✅ Migration applied successfully! Please refresh the page.");
+      notify("Schema migration applied successfully", "success");
+    } catch (e) {
+      const msg = (e as Error).message;
+      setMigrateStatus(`❌ ${msg}`);
+      notify(msg, "error");
     } finally {
       setBusy(false);
     }
@@ -121,11 +152,29 @@ function SystemPage() {
         </Panel>
       </div>
 
+      <div className="mt-[14px] grid gap-[14px] lg:grid-cols-1">
+        <Panel>
+          <PanelHeader title="Schema Migration" />
+          <div className="p-[12px] text-[13px]">
+            <p className="mb-[10px] text-muted-foreground">
+              Apply the latest database schema updates (adds area tracking to transfers and returns).
+              Run this once after deploying a new version that includes schema changes.
+            </p>
+            {migrateStatus && (
+              <p className="mb-[10px] rounded bg-muted px-3 py-2 text-[12px] font-mono">{migrateStatus}</p>
+            )}
+            <Button variant="secondary" disabled={busy} onClick={() => void applyMigration()}>
+              {busy ? "Applying…" : "Apply schema migration"}
+            </Button>
+          </div>
+        </Panel>
+      </div>
+
       <Panel className="mt-[14px]">
         <PanelHeader title="Activity log" />
         <div className="max-h-[420px] overflow-auto">
           <table className="data-table">
-            <thead><tr><th scope="col">Date &amp; time</th><th scope="col">User</th><th scope="col">Action</th><th scope="col">Details</th></tr></thead>
+            <thead><tr><th scope="col">Date & time</th><th scope="col">User</th><th scope="col">Action</th><th scope="col">Details</th></tr></thead>
             <tbody>
               {logs.map((l: any) => (
                 <tr key={l.id}><td>{formatDateTime(l.created_at)}</td><td>{l.username ?? "—"}</td><td className="font-medium">{l.action}</td><td>{l.details ?? ""}</td></tr>
